@@ -22,3 +22,5 @@ Krok 6 — pierwsza reguła biznesowa. Gdy CRUD działa: przy tworzeniu rezerwac
 To jest cały Etap 1 — realistycznie 2–4 tygodnie przy 30–60 min dziennie, i to jest OK, nie ścigaj się. Definicja ukończenia: działa 5 endpointów plus walidacja nakładania terminów, wszystko jest na GitHubie i umiesz wytłumaczyć każdą linijkę — to ostatnie jest faktycznym celem, nie działający kod.
 Zasady gry przypominam: piszesz sam, literka po literce, bez autouzupełniania całych bloków przez AI. Utknąłeś — 20–30 min własnej walki (błąd, debugger, dokumentacja), dopiero potem pytasz mnie w trybie "naprowadź, nie rozwiązuj". Po każdym większym kawałku możesz mi wkleić kod do code review.
 Zaczynaj od Kroku 1 — a jak wygenerujesz projekt i wstanie na 8080, wróć, to pogadamy o encji albo o pierwszym problemie, który się pojawi.
+
+Na koniec drobiazg do przemyślenia, nie do zmiany teraz: nazwy ścieżek. Masz /reservation/create, /reservation/get, /reservation/get/{id}. W REST-owym stylu czasownik w URL-u (create, get) jest zbędny, bo rolę czasownika pełni już metoda HTTP (POST, GET). Ale to temat na osobną, krótką rozmowę o konwencjach REST — zapisz w PLAN.md, wrócimy.
