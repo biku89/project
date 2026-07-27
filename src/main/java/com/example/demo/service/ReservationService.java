@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.ReservationRequest;
 import com.example.demo.model.Reservation;
 import com.example.demo.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,9 @@ public class ReservationService {
         this.reservationRepository = reservationRepository;
     }
 
-    public Reservation createReservation(Reservation reservation) {
+    public Reservation createReservation(ReservationRequest reservationRequest) {
+        Reservation reservation = new Reservation();
+        applyRequest(reservation, reservationRequest);
         return reservationRepository.save(reservation);
     }
 
@@ -32,15 +35,20 @@ public class ReservationService {
         reservationRepository.deleteById(id);
     }
 
-    public Optional<Reservation> updateReservation(Long id, Reservation reservation) {
+    public Optional<Reservation> updateReservation(Long id, ReservationRequest reservationRequest) {
+
         Optional<Reservation> current = reservationRepository.findById(id);
 
         return current.map(existing -> {
-            existing.setCustomerName(reservation.getCustomerName());
-            existing.setServiceType(reservation.getServiceType());
-            existing.setStartTime(reservation.getStartTime());
-            existing.setEndTime(reservation.getEndTime());
+            applyRequest(existing, reservationRequest);
             return reservationRepository.save(existing);
         });
+    }
+
+    private void applyRequest(Reservation reservation, ReservationRequest reservationRequest) {
+        reservation.setCustomerName(reservationRequest.customerName());
+        reservation.setServiceType(reservationRequest.serviceType());
+        reservation.setStartTime(reservationRequest.startTime());
+        reservation.setEndTime(reservationRequest.endTime());
     }
 }

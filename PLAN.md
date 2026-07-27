@@ -24,3 +24,6 @@ Zasady gry przypominam: piszesz sam, literka po literce, bez autouzupełniania c
 Zaczynaj od Kroku 1 — a jak wygenerujesz projekt i wstanie na 8080, wróć, to pogadamy o encji albo o pierwszym problemie, który się pojawi.
 
 Na koniec drobiazg do przemyślenia, nie do zmiany teraz: nazwy ścieżek. Masz /reservation/create, /reservation/get, /reservation/get/{id}. W REST-owym stylu czasownik w URL-u (create, get) jest zbędny, bo rolę czasownika pełni już metoda HTTP (POST, GET). Ale to temat na osobną, krótką rozmowę o konwencjach REST — zapisz w PLAN.md, wrócimy.
+Zapisz do notatek hasło „mapper” jako temat na później, gdy encji i DTO będzie więcej.
+
+własna adnotacja na całym record (elegancko, ale sporo kodu — na później)
