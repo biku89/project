@@ -11,7 +11,6 @@ public class Reservation {
     @Id
     @GeneratedValue
     private Long id;
-    private String customerName;
     private String serviceType;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
@@ -19,9 +18,8 @@ public class Reservation {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
-    public Reservation(Long id, String customerName, String serviceType, LocalDateTime startTime, LocalDateTime endTime) {
+    public Reservation(Long id, String serviceType, LocalDateTime startTime, LocalDateTime endTime) {
         this.id = id;
-        this.customerName = customerName;
         this.serviceType = serviceType;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -47,14 +45,6 @@ public class Reservation {
         this.id = id;
     }
 
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
-
     public String getServiceType() {
         return serviceType;
     }
@@ -75,19 +65,19 @@ public class Reservation {
         return endTime;
     }
 
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Reservation that = (Reservation) o;
-        return Objects.equals(id, that.id) && Objects.equals(customerName, that.customerName) && Objects.equals(serviceType, that.serviceType) && Objects.equals(startTime, that.startTime) && Objects.equals(endTime, that.endTime);
+        return Objects.equals(id, that.id) && Objects.equals(serviceType, that.serviceType) && Objects.equals(startTime, that.startTime) && Objects.equals(endTime, that.endTime) && Objects.equals(customer, that.customer);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, customerName, serviceType, startTime, endTime);
+        return Objects.hash(id, serviceType, startTime, endTime, customer);
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 }

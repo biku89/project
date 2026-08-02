@@ -7,12 +7,12 @@ import java.time.LocalDateTime;
 
 public record ReservationRequest(
         @NotBlank
-        String customerName,
-        @NotBlank
         String serviceType,
         @NotNull
         LocalDateTime startTime,
         @NotNull
-        LocalDateTime endTime
+        LocalDateTime endTime,
+        @NotNull
+        Long customerId
 ) {
 }

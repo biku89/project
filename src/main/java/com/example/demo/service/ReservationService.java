@@ -2,9 +2,12 @@ package com.example.demo.service;
 
 import com.example.demo.dto.ReservationRequest;
 import com.example.demo.dto.ReservationResponse;
+import com.example.demo.exception.CustomerNotFoundException;
 import com.example.demo.exception.InvalidReservationException;
 import com.example.demo.exception.ReservationConflictException;
+import com.example.demo.model.Customer;
 import com.example.demo.model.Reservation;
+import com.example.demo.repository.CustomerRepository;
 import com.example.demo.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +18,11 @@ import java.util.Optional;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
+    private final CustomerRepository customerRepository;
 
-    public ReservationService(ReservationRepository reservationRepository) {
+    public ReservationService(ReservationRepository reservationRepository, CustomerRepository customerRepository) {
         this.reservationRepository = reservationRepository;
+        this.customerRepository = customerRepository;
     }
 
     public ReservationResponse createReservation(ReservationRequest reservationRequest) {
@@ -56,7 +61,10 @@ public class ReservationService {
     }
 
     private void applyRequest(Reservation reservation, ReservationRequest reservationRequest) {
-        reservation.setCustomerName(reservationRequest.customerName());
+        Customer customer = customerRepository.findById(reservationRequest.customerId())
+                        .orElseThrow(() -> new CustomerNotFoundException("customer not found: " + reservationRequest.customerId()));
+
+        reservation.setCustomer(customer);
         reservation.setServiceType(reservationRequest.serviceType());
         reservation.setStartTime(reservationRequest.startTime());
         reservation.setEndTime(reservationRequest.endTime());
@@ -65,7 +73,8 @@ public class ReservationService {
     private ReservationResponse toResponse(Reservation reservation) {
         return new ReservationResponse(
                 reservation.getId(),
-                reservation.getCustomerName(),
+                reservation.getCustomer().getId(),
+                reservation.getCustomer().getName(),
                 reservation.getServiceType(),
                 reservation.getStartTime(),
                 reservation.getEndTime()
