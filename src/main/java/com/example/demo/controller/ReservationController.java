@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.ReservationRequest;
-import com.example.demo.model.Reservation;
+import com.example.demo.dto.ReservationResponse;
 import com.example.demo.service.ReservationService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -20,17 +20,17 @@ public class ReservationController {
     }
 
     @PostMapping("/create")
-    public Reservation createReservation(@Valid @RequestBody ReservationRequest reservation) {
+    public ReservationResponse createReservation(@Valid @RequestBody ReservationRequest reservation) {
          return reservationService.createReservation(reservation);
     }
 
     @GetMapping("/get")
-    public List<Reservation> getAllReservation() {
+    public List<ReservationResponse> getAllReservation() {
         return reservationService.getAllReservation();
     }
 
     @GetMapping("/get/{id}")
-    public ResponseEntity<Reservation> getReservation(@PathVariable Long id) {
+    public ResponseEntity<ReservationResponse> getReservation(@PathVariable Long id) {
         return reservationService.getReservation(id)
                 .map(reservation -> ResponseEntity.ok(reservation))
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -43,7 +43,7 @@ public class ReservationController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Reservation> updateReservation(@PathVariable Long id,
+    public ResponseEntity<ReservationResponse> updateReservation(@PathVariable Long id,
                                                          @Valid @RequestBody ReservationRequest reservation) {
         return reservationService.updateReservation(id, reservation)
                 .map(r -> ResponseEntity.ok(r))

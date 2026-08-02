@@ -1,13 +1,13 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.ReservationRequest;
+import com.example.demo.dto.ReservationResponse;
 import com.example.demo.exception.InvalidReservationException;
 import com.example.demo.exception.ReservationConflictException;
 import com.example.demo.model.Reservation;
 import com.example.demo.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,34 +20,38 @@ public class ReservationService {
         this.reservationRepository = reservationRepository;
     }
 
-    public Reservation createReservation(ReservationRequest reservationRequest) {
+    public ReservationResponse createReservation(ReservationRequest reservationRequest) {
         Reservation reservation = new Reservation();
         validateTimes(reservationRequest);
         validateNoOverlap(reservationRequest);
         applyRequest(reservation, reservationRequest);
-        return reservationRepository.save(reservation);
+        Reservation saved = reservationRepository.save(reservation);
+        return toResponse(saved);
     }
 
-    public List<Reservation> getAllReservation() {
-        return reservationRepository.findAll();
+    public List<ReservationResponse> getAllReservation() {
+        return reservationRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
-    public Optional<Reservation> getReservation(Long id) {
-        return reservationRepository.findById(id);
+    public Optional<ReservationResponse> getReservation(Long id) {
+        return reservationRepository.findById(id).map(this::toResponse);
     }
 
     public void deleteReservation(Long id) {
         reservationRepository.deleteById(id);
     }
 
-    public Optional<Reservation> updateReservation(Long id, ReservationRequest reservationRequest) {
+    public Optional<ReservationResponse> updateReservation(Long id, ReservationRequest reservationRequest) {
         validateTimes(reservationRequest);
         validateNoOverlapForUpdate(reservationRequest, id);
         Optional<Reservation> current = reservationRepository.findById(id);
 
         return current.map(existing -> {
             applyRequest(existing, reservationRequest);
-            return reservationRepository.save(existing);
+            return toResponse(reservationRepository.save(existing));
         });
     }
 
@@ -56,6 +60,16 @@ public class ReservationService {
         reservation.setServiceType(reservationRequest.serviceType());
         reservation.setStartTime(reservationRequest.startTime());
         reservation.setEndTime(reservationRequest.endTime());
+    }
+
+    private ReservationResponse toResponse(Reservation reservation) {
+        return new ReservationResponse(
+                reservation.getId(),
+                reservation.getCustomerName(),
+                reservation.getServiceType(),
+                reservation.getStartTime(),
+                reservation.getEndTime()
+        );
     }
 
     private void validateTimes(ReservationRequest request) {

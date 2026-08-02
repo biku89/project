@@ -1,29 +1,73 @@
-Trzymajmy się aplikacji do rezerwacji — konkretnie zróbmy system rezerwacji wizyt (np. u fryzjera/mechanika, temat sobie dopasujesz). Jest życiowy, ma naturalną logikę biznesową (terminy nie mogą się nakładać) i rośnie etapami. Rozpiszę Ci start tak, żebyś dziś mógł usiąść i zacząć.
-Krok 0 — narzędzia. IntelliJ IDEA (Community wystarczy), Java 21, Git. Konto na GitHubie, jeśli nie masz.
-Krok 1 — wygenerowanie projektu. Wchodzisz na start.spring.io i wybierasz: Maven, Java 21, Spring Boot (najnowsza stabilna), a z zależności tylko trzy: Spring Web, Spring Data JPA, H2 Database. Nic więcej — żadnego Security, Lombok też na razie odpuść, bo ukrywa kod, który masz zrozumieć. Pobierasz, otwierasz w IntelliJ, odpalasz klasę główną i sprawdzasz, że aplikacja wstaje na porcie 8080. Pierwszy commit: "initial project setup".
-Krok 2 — struktura pakietów. Prosto i warstwowo:
-com.twojanazwa.rezerwacje
-├── controller
-├── service
-├── repository
-└── model
-Krok 3 — pierwsza encja. W model klasa Reservation z polami: id (Long, generowany), customerName (String), serviceType (String — na razie zwykły tekst, np. "strzyżenie"), startTime i endTime (LocalDateTime), status (na razie String, potem zamienisz na enum). Adnotacje @Entity, @Id, @GeneratedValue. I tu pierwsze ćwiczenie z "dlaczego": sprawdź, co się stanie, gdy usuniesz konstruktor bezargumentowy — i dowiedz się, czemu JPA go wymaga.
-Krok 4 — repozytorium. W repository interfejs ReservationRepository extends JpaRepository<Reservation, Long>. Zero implementacji. Zatrzymaj się tu na moment: skąd bierze się działający kod, skoro napisałeś tylko interfejs? (To Spring w locie generuje proxy — warto o to podpytać, jak dojdziesz do tego miejsca.)
-Krok 5 — serwis i kontroler, jeden endpoint na raz. Kolejność:
+# PLAN — System rezerwacji wizyt (nauka Spring Boot)
 
-POST /api/reservations — tworzenie rezerwacji. Kontroler przyjmuje JSON, woła serwis, serwis zapisuje przez repozytorium.
-GET /api/reservations — lista wszystkich.
-GET /api/reservations/{id} — pojedyncza; tu pierwszy raz obsłużysz przypadek "nie znaleziono" (404 zamiast wyjątku na twarz klienta).
-PUT /api/reservations/{id} — edycja.
-DELETE /api/reservations/{id} — usunięcie.
+## Zasady pracy
+- Piszę sam, literka po literce — bez autouzupełniania całych bloków przez AI.
+- Utknąłem → 20–30 min własnej walki (błąd, debugger, dokumentacja), dopiero potem pytam w trybie "naprowadź, nie rozwiązuj".
+- Po każdym większym kawałku — code review + commit.
+- Cel to rozumienie każdej linijki, nie działający kod. Regularność (godzina dziennie) bije intensywność.
 
-Każdy endpoint testujesz ręcznie (Postman albo wbudowany klient HTTP w IntelliJ) i commitujesz osobno. Nie pisz wszystkich pięciu na raz — jeden, przetestuj, zrozum, commit, następny.
-Krok 6 — pierwsza reguła biznesowa. Gdy CRUD działa: przy tworzeniu rezerwacji sprawdź, czy termin nie nakłada się na istniejącą rezerwację, i jeśli tak — zwróć 409 Conflict z sensownym komunikatem. To pozornie drobiazg, ale zmusi Cię do napisania własnego zapytania w repozytorium i pomyślenia, gdzie ta logika ma mieszkać (w serwisie, nie w kontrolerze — i warto rozumieć czemu).
-To jest cały Etap 1 — realistycznie 2–4 tygodnie przy 30–60 min dziennie, i to jest OK, nie ścigaj się. Definicja ukończenia: działa 5 endpointów plus walidacja nakładania terminów, wszystko jest na GitHubie i umiesz wytłumaczyć każdą linijkę — to ostatnie jest faktycznym celem, nie działający kod.
-Zasady gry przypominam: piszesz sam, literka po literce, bez autouzupełniania całych bloków przez AI. Utknąłeś — 20–30 min własnej walki (błąd, debugger, dokumentacja), dopiero potem pytasz mnie w trybie "naprowadź, nie rozwiązuj". Po każdym większym kawałku możesz mi wkleić kod do code review.
-Zaczynaj od Kroku 1 — a jak wygenerujesz projekt i wstanie na 8080, wróć, to pogadamy o encji albo o pierwszym problemie, który się pojawi.
+## Stack
+IntelliJ, Java 21, Maven, Spring Boot, Spring Web, Spring Data JPA, H2 (in-memory), Bean Validation.
 
-Na koniec drobiazg do przemyślenia, nie do zmiany teraz: nazwy ścieżek. Masz /reservation/create, /reservation/get, /reservation/get/{id}. W REST-owym stylu czasownik w URL-u (create, get) jest zbędny, bo rolę czasownika pełni już metoda HTTP (POST, GET). Ale to temat na osobną, krótką rozmowę o konwencjach REST — zapisz w PLAN.md, wrócimy.
-Zapisz do notatek hasło „mapper” jako temat na później, gdy encji i DTO będzie więcej.
+---
 
-własna adnotacja na całym record (elegancko, ale sporo kodu — na później)
+## Etap 1 — CRUD ✅
+- 5 endpointów (POST / GET lista / GET po id / PUT / DELETE)
+- Constructor injection (DI), kontener IoC
+- JpaRepository (proxy generowane w locie)
+- Encja JPA (@Entity, @Id, @GeneratedValue, konstruktor bezargumentowy)
+- Optional z .map() / orElseGet() — obsługa "nie znaleziono" bez if
+- ResponseEntity (kiedy .build(), kiedy nie)
+- Baza H2 in-memory (dane znikają po restarcie)
+
+## Etap 2 — DTO, walidacja, reguły biznesowe — częściowo ✅
+- **Request DTO** ✅ (record; klient nie narzuci id)
+- **applyRequest** ✅ (wydzielone mapowanie request→encja, DRY)
+- **Walidacja pól** ✅ (@NotBlank / @NotNull + @Valid → 400)
+- **Globalna obsługa błędów** ✅ (@RestControllerAdvice + własne wyjątki)
+- **Reguła czasów** ✅ (endTime po startTime → 400)
+- **Reguła kolizji terminów** ✅ (własne @Query JPQL, 409, + self-collision przy update)
+- **Response DTO** ✅ (encja odizolowana z obu stron; stream().map().toList())
+- [ ] **Druga encja `Customer` + relacja `@ManyToOne`** ← następny krok
+- [ ] Lazy loading (pojawi się przy relacji)
+
+## Etap 3 — logika biznesowa (do zrobienia)
+- [ ] Reguły typu: anulowanie najpóźniej dobę wcześniej, statusy rezerwacji
+- [ ] status jako enum (zamiast String)
+
+## Etap 4 — testy (do zrobienia)
+- [ ] Testy jednostkowe serwisu (JUnit, Mockito)
+- [ ] Testy integracyjne endpointów
+
+## Etap 5 — dodatki (do zrobienia)
+- [ ] Spring Security (logowanie)
+- [ ] Migracje bazy (Flyway)
+- [ ] PostgreSQL zamiast H2 (dane przeżywają restart)
+- [ ] Docker + docker-compose (aplikacja + Postgres)
+
+## Etap 5b — refaktor architektoniczny (do zrobienia)
+- [ ] Przejście z architektury warstwowej na heksagonalną (porty i adaptery, wydzielenie domeny)
+- [ ] Cel edukacyjny: poczuć na własnym kodzie, co ta architektura zmienia i co kosztuje
+
+## Kiedyś (nie teraz)
+- [ ] Kubernetes — dopiero gdy będzie wiele serwisów; przy jednej apce uczy głównie frustracji
+- [ ] CI/CD, monitoring
+
+---
+
+## Notatki / drobiazgi do dopięcia
+- [ ] **Konwencje REST w URL-ach** — /create, /get są zbędne (czasownik niesie metoda HTTP). Poprawić na /reservation, /reservation/{id}.
+- [ ] **Mapper jako osobna klasa** — gdy encji i DTO przybędzie, wydzielić mapowanie z serwisu.
+- [ ] **Własne komunikaty walidacji po polsku** (@NotBlank(message="...")).
+- [ ] **ReservationNotFoundException** — alternatywny styl obsługi "nie znaleziono" (jawny wyjątek zamiast Optional). Trzymać jeden styl konsekwentnie.
+- [ ] **Long → UUID dla id** — powód: IDOR (odgadywalne id), brak wycieku liczby rekordów. Zrobić przy okazji bezpieczeństwa (Etap 5).
+- [ ] **Optymalizacja wielokrotnych wywołań bazy w update** (walidacja + findById + save).
+- [ ] **orElse vs orElseGet** — orElse liczy argument zawsze, orElseGet leniwie (tylko gdy pusto).
+- [ ] **Cross-field validation przez własną adnotację na record** — elegancko, ale sporo kodu; na później.
+- [ ] **status jako enum** zamiast String.
+
+## Tematy na rozmowy rekrutacyjne (opanowane po drodze)
+- checked vs unchecked exceptions (RuntimeException = unchecked, nie wymusza try-catch)
+- overlap dwóch przedziałów przez negację (De Morgan)
+- constructor injection > field injection
+- czemu Optional zamiast null
